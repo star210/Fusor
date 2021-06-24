@@ -34,7 +34,7 @@ Pinout
 | Vacuum Pressure      | A4       | White        | 2-8v /         | ADC2 CH0 |                    |
 | Vacuum Pump Relay    | T0       | Yellow       | 24v            | GPIO26   |                    |
 | Variac Relay         | T1       | Yellow       | 24v            | GPIO27   |                    |
-| Plinth Safety Switch | I2       | Yellow       | 24v            | GPIO32   | Safety switch      |
+| Plinth Safety Switch | I2       | Yellow       | 24v            | GPIO34   | Safety switch      |
 
 - Buttons on faceplate - GPIO32 analog input resistor ladder
 
