@@ -17,6 +17,7 @@ STAGE 1 (No automation, control by simple web interface)
 - Web readout of temp sensors https://randomnerdtutorials.com/esp32-ds18b20-temperature-arduino-ide/
 - SD card to store CSS/HTML files https://randomnerdtutorials.com/esp32-web-server-microsd-card/
 - Wifi manager Access Point using https://github.com/tzapu/WiFiManager
+- OK / ALARM state that needs a reset button on webpage. OLED and Web to display ALARM code/reason
 
 STAGE 2 (Automated standalone, remote monitoring)
 
@@ -47,5 +48,25 @@ IDC10 expansion connector pinout
 | Motor driver | 8        | Blue         | IN1      | IO17 | PWM                  |
 | DS18S20 Gnd  | 9        | Black        | GND      | GND  |                      |
 | Motor driver | 10       | Green        | IN2      | IO16 | PWM                  |
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Triggers that cause an ALARM state, switch OFF both pump and High Voltage relays. Wait for RESET on web
+
+| Alarm Event               | Description                                 | 
+|---------------------------|---------------------------------------------|
+| PUMP_TEMP_MAX is reached  | Pump overheated                             | 
+| DE_GAS_TIMEOUT is reached | Seal leak causing it to never get to vacuum | 
+| PLATE_TEMP_MAX is reached | Plasma causing too much heat                |
+| MIN_PRESSURE reached      | Cracked glass exposing HV element           |
+| SAFETY_SWITCH triggered   | Removal of plinth cover vacuum ok but no HV |
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+List of parameters
+
+
+
 
 
