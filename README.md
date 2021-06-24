@@ -12,7 +12,7 @@ STAGE 1 (No automation, control by simple web interface)
 - OLED Displays important Wifi connection info and status
 - Pump and Transformer relays Web ON/OFF button https://randomnerdtutorials.com/esp32-web-server-arduino-ide/
 - Web read out for all sensors in RAW and Volts 
-- Web readout of mapped temp sensor 
+- Web readout of mapped pressure sensor using graph
 - Web slider for variac PID input https://randomnerdtutorials.com/esp32-web-server-slider-pwm/
 - Web readout of temp sensors https://randomnerdtutorials.com/esp32-ds18b20-temperature-arduino-ide/
 - SD card to store CSS/HTML files https://randomnerdtutorials.com/esp32-web-server-microsd-card/
