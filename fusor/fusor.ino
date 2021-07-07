@@ -1,10 +1,15 @@
 
 /* To do
 
-Map the resistor divider to ADC input gain for 0 - 10v then map to 0 - 300v etc...
 wifi setup and code
 vacuum lookup table
-PID test and setup
+PID test
+Function to write to OLED within main
+debug
+test oled sensor readout position
+
+
+
 
 
 */
@@ -15,26 +20,30 @@ PID test and setup
 
 enum State {
   IDLE,
-  VACUUM,
+  TEST,
+  PUMPDOWN,
   HIGHVOLTAGE,
   COOLDOWN,
   ALARM
 } state;
 
 void setup() {
+
+  #if defined(DEBUG)
+  Debug.begin(115200);
+#else
+  client.open(0);
+#endif
   
   buttons.setup();
   adc.setup();
-  motor.setup();
+  variac.setup();
   oled.setup();
   rtc.setup();
   sd.setup();
   temp.setup();
   wifi.setup();
   
-  
-  
- 
   state = IDLE;
 }
 

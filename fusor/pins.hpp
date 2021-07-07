@@ -3,7 +3,7 @@
 #include "Arduino.h"
 
 enum Pins {
-  FC = 2,                   // RS485 flow control (Needs to be high for GPIO32 to work!
+  FC = 2,                   // Needs to be high for GPIO32 to work!
   VACUUM_PUMP_RELAY = 26;   // T0 vacuum pump relay
   HIGH_VOLTAGE_RELAY = 27;  // T1 high voltage relay
   SAFETY_SWITCH = 34;       // Plinth safety microswitch

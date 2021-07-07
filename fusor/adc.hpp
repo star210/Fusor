@@ -1,18 +1,18 @@
 #pragma once
 
-// 3.3k - 2.2k resistor divider 10v in 4v out - adc volts x 2.5 
-// ads1115 15bit resolution ADS1115 - 32768 
+// 3.3k - 2.2k resistor divider 10v in 4v out - adc volts x 2.5
+// ads1115 15bit resolution ADS1115 - 32768
 //
 // Volts Variac multiplier 0 - 300v
 // 32768 / 8000 = 4.096v 32000 / 8000 = 4v
 // 4v * 2.5 = 10v
-// 10v * 30 = 300v 
+// 10v * 30 = 300v
 // 32000 / 106.66666 = 300v
 //
-// Amps Variac multiplier 0 - 2A
+// Amps Variac multiplier 0 - 2000mA
 // 32768 / 8000 = 4.096v 32000 / 8000 = 4v
 // 4v * 2.5 = 10v
-// 10v * 200 = 2000mA 
+// 10v * 200 = 2000mA
 // 32000 / 16 = 2000mA
 //
 // High Voltage 0 - 10000v
@@ -34,12 +34,17 @@ Adafruit_ADS1115 ads1(0x48);      // 0 - 10v input
 Adafruit_ADS1115 ads2(0x49);      // 0 - 5v input
 
 //ads1 gain x1
-float VacuumPressure = 0.0;          // ads1 CH0 - A0 Norvi 0 - 10v 0.8 - 3.2v 
-float VariacVolts = 0.0;             // ads1 CH1 - A1 Norvi 0 - 10v 0 - 4v 
-float VariacAmps = 0.0;              // ads1 CH2 - A2 Norvi 0 - 10v 0 - 4v
+float vacuumPressure = 0.0;          // ads1 CH0 - A0 Norvi 0 - 10v 0.8 - 3.2v
+float variacVolts = 0.0;             // ads1 CH1 - A1 Norvi 0 - 10v 0 - 4v
+float variacMilliAmps = 0.0;              // ads1 CH2 - A2 Norvi 0 - 10v 0 - 4v
 //ads2 gain x2
-float HighVoltageKiloVolts = 0.0;    // ads2 CH0 - A4 Norvi 0 - 5v 0 - 2v
-float HighVoltageMilliAmps = 0.0;    // ads2 CH1 - A5 Norvi 0 - 5v 0 - 2v
+float highVoltageKiloVolts = 0.0;    // ads2 CH0 - A4 Norvi 0 - 5v 0 - 2v
+float highVoltageMilliAmps = 0.0;    // ads2 CH1 - A5 Norvi 0 - 5v 0 - 2v
+
+unsigned long currentTime = millis();
+unsigned long previousTime = 0;
+
+bool sensorSerialPrint = 0;  //
 
 void setup() {
   ads1.begin();
@@ -65,8 +70,21 @@ void update()
   adc3 = ads2.readADC_SingleEnded(0);
   adc4 = ads2.readADC_SingleEnded(1);
 
-  VacuumPressure = adc0;  // LUT needed
-  VariacVolts = adc1 / 106.6666;
-  VariacAmps = adc2 / 16;
-  HighVoltageKiloVolts = adc3 / 3.2;
-  HighVoltageMilliAmps = adc4 / 640;
+  vacuumPressure = adc0;  // LUT needed
+  variacVolts = adc1 / 106.6666;
+  variacMilliAmps = adc2 / 16;
+  highVoltageKiloVolts = adc3 / 3.2;
+  highVoltageMilliAmps = adc4 / 640;
+
+// Print sensor readout every 1 second on serial 
+    if (currentTime - previousTime >= 1000) {
+      // send 1 second update to OLED here
+      if (sensorSerialPrint) { 
+      Serial.print("Vacuum Pressure: "); Serial.print(vacuumPressure); Serial.println(" mTorr");
+      Serial.print("Variac Voltage: "); Serial.print(variacVolts); Serial.println(" Volts AC");
+      Serial.print("Variac Current: "); Serial.print(variacMilliAmps); Serial.println(" mA AC");
+      Serial.print("NST Voltage: "); Serial.print(highVoltageKiloVolts); Serial.println(" KV DC");
+      Serial.print("NST Current: "); Serial.print(highVoltageMilliAmps); Serial.println(" mA DC");
+      previousTime = currentTime;
+    }
+  }
