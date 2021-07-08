@@ -10,5 +10,5 @@ enum Pins {
   BUTTONS = 32,             // Analog input
   TEMP_SENSOR = 25;         // DS18B20 sensor data line 
   M1 = 17;                  // DC motor driver IN1
-  M2 = 16;                   // DC motor driver IN2
+  M2 = 16;                  // DC motor driver IN2
 };

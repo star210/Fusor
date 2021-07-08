@@ -8,7 +8,7 @@ void setup() {
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(FC, OUTPUT);
-  digitalWrite(FC, HIGH); // FC needed for A0 to work
+  digitalWrite(FC, HIGH); // FC needed for A0 to work???
   Serial.println("Buttons setup complete");
 }
 

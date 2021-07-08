@@ -1,40 +1,28 @@
 
 /* To do
 
-wifi setup and code
 vacuum lookup table
-PID test
-Function to write to OLED within main
-debug
-test oled sensor readout position
-
-
-
-
+PID test with dummy load
+Decide when and what to write to OLED 
+handle alarmstate 
+print sensors and temps to serial every x seconds
 
 */
 
-#define DEBUG
-
+bool safetyTriggered = 0;           //Removal of plinth cover vacuum ok but no HV
+bool alarmState = 0;
  
-
 enum State {
   IDLE,
-  TEST,
-  PUMPDOWN,
-  HIGHVOLTAGE,
+  PUMP_DOWN,
+  HIGH_VOLTAGE,
   COOLDOWN,
   ALARM
 } state;
 
 void setup() {
 
-  #if defined(DEBUG)
-  Debug.begin(115200);
-#else
-  client.open(0);
-#endif
-  
+ 
   buttons.setup();
   adc.setup();
   variac.setup();
@@ -42,30 +30,36 @@ void setup() {
   rtc.setup();
   sd.setup();
   temp.setup();
-  wifi.setup();
   
   state = IDLE;
 }
 
 loop() {
+
+if (alarmState){
+  variacRelayState = 0; // turn off power
+  pumpRelayState = 0;   // turn off vacuum pump
+}
+
+
+  
   read inputs (including millis());
 
   switch(STATE) {
   case IDLE:
-    if(some condition) {
-      start the arm rotating;
-      state = ARM_ROTATING;
-    }
-    else if(some other condition) {
-      start the process of closing the steam
-      state = STEAM_CLOSING;
+    if(pump started) {
+      state = PUMP_DOWN;
     }
     break;
 
-  case ARM_ROTATING:
-    if(theArmStillNeedsToRotateSomeMore()) {
-      rotate the arm some more;
-      // stay in ARM_ROTATING state
+  case PUMP_DOWN:
+  if (!pumpRelayState){
+    start pump timeout
+  }
+  if (pump timer < PUMP_TIMEOUT){
+    if(current pressure < MIN_PRESSURE){
+      
+    }
     }
     else {
       begin hord actuation();
@@ -73,7 +67,20 @@ loop() {
     }
    break;
 
-   et cetera.
+case PUMP_DOWN:
+  if (!pumpRelayState){
+    start pump timeout
+  }
+  if (pump timer < PUMP_TIMEOUT){
+    if(current pressure < MIN_PRESSURE){
+      
+    }
+    }
+    else {
+      begin hord actuation();
+      state = HORD_ACTUATION_TIMEOUT;
+    }
+   break;
 
   }
 }

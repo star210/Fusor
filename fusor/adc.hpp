@@ -27,7 +27,6 @@
 // 5v * 10 = 50mA
 // 32000 / 640 = 50mA
 
-
 #include <Adafruit_ADS1015.h>
 
 Adafruit_ADS1115 ads1(0x48);      // 0 - 10v input
@@ -75,16 +74,12 @@ void update()
   variacMilliAmps = adc2 / 16;
   highVoltageKiloVolts = adc3 / 3.2;
   highVoltageMilliAmps = adc4 / 640;
+}
 
-// Print sensor readout every 1 second on serial 
-    if (currentTime - previousTime >= 1000) {
-      // send 1 second update to OLED here
-      if (sensorSerialPrint) { 
+void printSensorValues() {
       Serial.print("Vacuum Pressure: "); Serial.print(vacuumPressure); Serial.println(" mTorr");
       Serial.print("Variac Voltage: "); Serial.print(variacVolts); Serial.println(" Volts AC");
       Serial.print("Variac Current: "); Serial.print(variacMilliAmps); Serial.println(" mA AC");
       Serial.print("NST Voltage: "); Serial.print(highVoltageKiloVolts); Serial.println(" KV DC");
       Serial.print("NST Current: "); Serial.print(highVoltageMilliAmps); Serial.println(" mA DC");
-      previousTime = currentTime;
     }
-  }

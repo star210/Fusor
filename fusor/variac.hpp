@@ -9,6 +9,8 @@
 #define PWM_CHANNEL_1 0;
 #define PWM_CHANNEL_2 1;
 
+#define MAX_VOLTAGE 100; // Max output voltage limit in volts
+
 double kp = 0, ki = 0, kd = 0.0;
 double input = 0, output = 0, setpoint = 0;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
@@ -41,8 +43,10 @@ void update() {
 
   input = VariacVoltage;       // Voltage readout in Volts from variac voltage sensor
   setpoint = setVoltage  // Set voltage 
+  
     while (!myPID.Compute())
-        if (input == setpoint)pwmOut(0); else pwmOut(output);
+        if (input == setpoint)pwmOut(0); else pwmOut(output);    // only move motor when needed
+        if (setVoltage > MAX_VOLTAGE) setVoltage = MAX_VOLTAGE;  // limit output voltage
 }
 
 void pwmOut(int out) {
@@ -81,7 +85,6 @@ void recoverPIDfromEEPROM() {
   }
   else Serial.println(F("Bad EEPROM checksum"));
 }
-
 
 void eedump() {
   for (int i = 0; i < 16; i++) {
