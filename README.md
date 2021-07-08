@@ -10,14 +10,14 @@ Compile using "ESP32 Dev Module" 240mhz
 STAGE 1 (No automation, control by serial, No web interface yet)
 
 - Serial displays all debug and status code
-- OLED copys serial output
-- Pump and Transformer relays faceplate button control
+- OLED copys serial output?
+- Pump and Transformer relays faceplate button control or serial control
 - Serial read out for all sensors in RAW and Volts 
 - Serial readout of pressure sensor using interpolated lookup table
-- Web slider for variac PID input
+- Serial voltage setpoint for variac motor PID 
 - Serial readout of temp sensors 
 - SD card test only
-- OK / ALARM state that needs a reset by power cycle. OLED and Serial to display ALARM code/reason
+- OK / ALARM state that needs a reset by serial letter. OLED and Serial to display ALARM code/reason
 
 STAGE 2 (Web monitoring, control by website)
 
