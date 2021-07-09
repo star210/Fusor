@@ -11,13 +11,13 @@ STAGE 1 (No automation, control by serial, No web interface yet)
 
 - Serial displays all debug and status code
 - OLED copys serial output?
-- Pump and Transformer relays faceplate button control or serial control
-- Serial read out for all sensors in RAW and Volts 
+- Pump and Transformer relays controlled with code
+- Serial read out for all sensors mapped 
 - Serial readout of pressure sensor using interpolated lookup table
-- Serial voltage setpoint for variac motor PID 
+- Auto variac motor PID program
 - Serial readout of temp sensors 
 - SD card test only
-- OK / ALARM state that needs a reset by serial letter. OLED and Serial to display ALARM code/reason
+- OK / ALARM state reset via panel button 
 
 STAGE 2 (Web monitoring, control by website)
 
