@@ -60,6 +60,7 @@ void pwmOut(int out) {
   }
 }
 
+
 void writetoEEPROM() { // keep PID set values in EEPROM so they are kept when arduino goes off
   eeput(kp, 0);
   eeput(ki, 4);
@@ -67,7 +68,7 @@ void writetoEEPROM() { // keep PID set values in EEPROM so they are kept when ar
   double cks = 0;
   for (int i = 0; i < 12; i++) cks += EEPROM.read(i);
   eeput(cks, 12);
-  Serial.println(F("PID values stored to EEPROM"));
+  Serial.println("PID values stored to EEPROM");
   //Serial.println(cks);
 }
 void recoverPIDfromEEPROM() {
@@ -77,13 +78,13 @@ void recoverPIDfromEEPROM() {
   cksEE = eeget(12);
   //Serial.println(cks);
   if (cks == cksEE) {
-    Serial.println(F("Found PID values on EEPROM"));
+    Serial.println("Found PID values on EEPROM");
     kp = eeget(0);
     ki = eeget(4);
     kd = eeget(8);
     myPID.SetTunings(kp, ki, kd);
   }
-  else Serial.println(F("Bad EEPROM checksum"));
+  else Serial.println("Bad EEPROM checksum");
 }
 
 void eedump() {

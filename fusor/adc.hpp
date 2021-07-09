@@ -40,10 +40,7 @@ float variacMilliAmps = 0.0;              // ads1 CH2 - A2 Norvi 0 - 10v 0 - 4v
 float highVoltageKiloVolts = 0.0;    // ads2 CH0 - A4 Norvi 0 - 5v 0 - 2v
 float highVoltageMilliAmps = 0.0;    // ads2 CH1 - A5 Norvi 0 - 5v 0 - 2v
 
-unsigned long currentTime = millis();
-unsigned long previousTime = 0;
-
-bool sensorSerialPrint = 0;  //
+unsigned long previousSensorReadTime = 0;
 
 void setup() {
   ads1.begin();
@@ -57,29 +54,37 @@ void setup() {
 
 void update()
 {
-  float adc0;
-  float adc1;
-  float adc2;
-  float adc3;
-  float adc4;
 
-  adc0 = ads1.readADC_SingleEnded(0);
-  adc1 = ads1.readADC_SingleEnded(1);
-  adc2 = ads1.readADC_SingleEnded(2);
-  adc3 = ads2.readADC_SingleEnded(0);
-  adc4 = ads2.readADC_SingleEnded(1);
+  unsigned long sensorReadTime = millis(); // timer to read temp every 1 second
 
-  vacuumPressure = adc0;  // LUT needed
-  variacVolts = adc1 / 106.6666;
-  variacMilliAmps = adc2 / 16;
-  highVoltageKiloVolts = adc3 / 3.2;
-  highVoltageMilliAmps = adc4 / 640;
+  if (sensorReadTime - previousSensorReadTime >= 100) { // Read and update only if 100ms has passed
+    
+    float adc0;
+    float adc1;
+    float adc2;
+    float adc3;
+    float adc4;
+
+    adc0 = ads1.readADC_SingleEnded(0);
+    adc1 = ads1.readADC_SingleEnded(1);
+    adc2 = ads1.readADC_SingleEnded(2);
+    adc3 = ads2.readADC_SingleEnded(0);
+    adc4 = ads2.readADC_SingleEnded(1);
+
+    vacuumPressure = adc0;  // LUT needed
+    variacVolts = adc1 / 106.6666;
+    variacMilliAmps = adc2 / 16;
+    highVoltageKiloVolts = adc3 / 3.2;
+    highVoltageMilliAmps = adc4 / 640;
+    
+    previousSensorReadTime = sensorReadTime;
+  }
 }
 
 void printSensorValues() {
-      Serial.print("Vacuum Pressure: "); Serial.print(vacuumPressure); Serial.println(" mTorr");
-      Serial.print("Variac Voltage: "); Serial.print(variacVolts); Serial.println(" Volts AC");
-      Serial.print("Variac Current: "); Serial.print(variacMilliAmps); Serial.println(" mA AC");
-      Serial.print("NST Voltage: "); Serial.print(highVoltageKiloVolts); Serial.println(" KV DC");
-      Serial.print("NST Current: "); Serial.print(highVoltageMilliAmps); Serial.println(" mA DC");
-    }
+  Serial.print("Vacuum Pressure: "); Serial.print(vacuumPressure); Serial.println(" mTorr");
+  Serial.print("Variac Voltage: "); Serial.print(variacVolts); Serial.println(" Volts AC");
+  Serial.print("Variac Current: "); Serial.print(variacMilliAmps); Serial.println(" mA AC");
+  Serial.print("NST Voltage: "); Serial.print(highVoltageKiloVolts); Serial.println(" KV DC");
+  Serial.print("NST Current: "); Serial.print(highVoltageMilliAmps); Serial.println(" mA DC");
+}

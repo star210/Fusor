@@ -11,6 +11,8 @@
 
 int SensorNumber = 0; // Counter of sensors
 
+unsigned long previousTempReadTime = 0;      
+
 float vacuumPumpTemp = 0;
 float plasmaPlateTemp = 0;
 float transformerTemp = 0;
@@ -31,23 +33,25 @@ void setup() {
 }
 
 void update() {
-  sensors.requestTemperatures();
-  vacuumPumpTemp = getTemperature(sensor1);
-  plasmaPlateTemp = getTemperature(sensor2);
-  transformerTemp = getTemperature(sensor3);
 
-  if (vacuumPumpTemp > VACCUUM_PUMP_TEMP_MAX) {
-    alarmState = 1;
-    Serial.print("Warning vacuum pump overheated");
-  }
-  if (plasmaPlateTemp > PLASMA_PLATE_TEMP_MAX) {
-    alarmState = 1;
-    Serial.print("Warning plasma plate overheated");
-  }
-  if (transformerTemp > TRANSFORMER_TEMP_MAX) {
-    alarmState = 1;
-    Serial.print("Warning transformer overheated");
-  }
+  unsigned long tempReadTime = millis(); // timer to read temp every 1 second
+
+  if (tempReadTime - previousTempReadTime >= 1000) { // Read and update only if 1 second has passed
+    sensors.requestTemperatures();
+    vacuumPumpTemp = getTemperature(sensor1);
+    plasmaPlateTemp = getTemperature(sensor2);
+    transformerTemp = getTemperature(sensor3);
+
+    if (vacuumPumpTemp > VACCUUM_PUMP_TEMP_MAX) {
+      alarmState = 1;
+    }
+    if (plasmaPlateTemp > PLASMA_PLATE_TEMP_MAX) {
+      alarmState = 2;
+    }
+    if (transformerTemp > TRANSFORMER_TEMP_MAX) {
+      alarmState = 3;
+    }
+    previousTempReadTime = tempReadTime;  
 }
 
 void printTemperature() {
