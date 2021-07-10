@@ -2,7 +2,6 @@
 
 #include "variac.hpp"
 #include "vacuum.hpp"
-#include 
 
 void process_serial() {
   char cmd = Serial.read();

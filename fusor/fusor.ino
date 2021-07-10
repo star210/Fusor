@@ -4,16 +4,20 @@
   vacuum lookup table
   PID test with dummy load
   serial print rtc timer
-  handle voltage up in variac
-  when vacuum is above min start voltage up
-  hold voltage at max for x amount of time
-  then wind down
-  cooldown for x amount of time
-  repeat
-
 */
 
 #define INCREASE_TIME 400;
+#define COOLDOWN_TIME 1000;
+#define PLASMA_TIME 1000;
+
+unsigned long plasmaTimer;
+unsigned long plasmaTime;
+
+unsigned long cooldownTimer;
+unsigned long lastTime;
+
+bool cooldownStarted = 0;
+bool plasmaStarted = 0;
 
 int alarmState = 0;           //Removal of plinth cover vacuum ok but no HV
 
@@ -21,7 +25,10 @@ int alarmState = 0;           //Removal of plinth cover vacuum ok but no HV
 enum State {
   IDLE,
   VACUUM,
+  VOLTAGE_UP,
   PLASMA,
+  VOLTAGE_DOWN,
+  COOLDOWN,
   ALARM
 } state;
 
@@ -41,8 +48,6 @@ void setup() {
 
 loop() {
 
-  unsigned long timeNow = millis() ;
-
   if (alarmState > 0) {  // If any of the 5 alarms trigger set to alarm state
     state = ALARM;
   }
@@ -58,60 +63,101 @@ loop() {
       vacuumPump = 1; // Start vacuum pump routine
       if (vacuumPressure < MIN_PRESSURE) {
         state = PLASMA;  //can this be done in vacuum.hpp ?
+        variacRelayState = 1; // turn on power to variac
       }
       break;
 
     case VOLTAGE_UP:
-      unsigned long lastTime;
-      variacRelayState = 1; // turn on power to variac
-      if (timeNow - lastTime > INCREASE_TIME) {        // increase voltage every 400ms
-        lastTime = timeNow;               // update time stamp
+      if (millis() - lastTime > 100) {        // increase voltage every 100ms
         if (setVoltage < MAX_VOLTAGE) {
-          setVoltage ++;                   // add one volt to the variac input
+          setVoltage ++;
+          Serial.println(setVoltage);
+          Serial.print(" Volts");
         }
-        else if (setVoltage = < MAX_VOLTAGE) {
-
+        else if (setVoltage >= MAX_VOLTAGE) {
+          Serial.println("Max voltage reached");
+          state = PLASMA;
         }
+        lastTime = millis();               // update time stamp
       }
       break;
 
     case PLASMA:
+      if (!plasmaStarted) {
+        plasmaTimer = millis();
+        plasmaStarted = 1;
+        Serial.println("Plasma Started");
+      }
+      if (millis() > plasmaTimer + PLASMA_TIME) {        // increase voltage every 100ms
+        state = VOLTAGE_DOWN;
+        plasmaStarted = 0;      // reset plasma timer
+        Serial.println("Plasma Finished");
+      }
+      break;
 
+    case VOLTAGE_DOWN:
+      if (millis() - lastTime > 100) {        // increase voltage every 100ms
+        if (setVoltage > 0) {
+          setVoltage --;                  // decrease voltage by 1 volt
+          Serial.println(setVoltage);
+          Serial.print(" Volts");
+        }
+        else if (setVoltage <= 0) {
+          variacRelayState = 0; // turn on power to variac
+          state = COOLDOWN;
+        }
+        lastTime = millis();               // update time stamp
+      }
+      break;
+
+    case COOLDOWN:
+      if (!cooldownStarted) {
+        cooldownTimer = millis();
+        cooldownStarted = 1;
+        Serial.println("Cooldown Started");
+      }
+      if (millis() > cooldownTimer + COOLDOWN_TIME) {        // increase voltage every 100ms
+        state = PUMPDOWN;
+        cooldownStarted = 0;      // reset cooldown timer
+        Serial.println("Cooldown Finished");
+      }
       break;
 
     case ALARM:
-      variacRelayState = 0; // turn off power
-      setVoltage = 0;       // set variac to 0v
-      pumpRelayState = 0;   // turn off vacuum pump
       if (buttonType == 1) { // Square button pressed
         Serial.println("Alarm reset");
         alarmState = 0;      // Reset alarm state
         state = PUMP_DOWN;   // Start pumpdown again
         pumpStarted = 0;     // reset pump bool here just incase
       }
+      else {
+        printAlarmState();       // Print alarm reason every 1 second
+        vacuumPump = 0;       // turn off pump routine
+        variacRelayState = 0; // turn off power
+        setVoltage = 0;       // set variac to 0v
+      }
       break;
   }
 }
 
-void printAlarmState(alarmState) {
+void printAlarmState() {
 
-}
-unsigned long lastAlarmPrint;
-if (now - lastAlarmPrint > 1000) {
-  if (alarmState == 1) {
-    Serial.println("Warning vacuum pump overheated");
+  if (millis() - lastAlarmPrint > 1000) {
+    if (alarmState == 1) {
+      Serial.println("Warning vacuum pump overheated");
+    }
+    if (alarmState == 2) {
+      Serial.println("Warning plasma plate overheated");
+    }
+    if (alarmState == 3) {
+      Serial.println("Warning transformer overheated");
+    }
+    if (alarmState == 4) {
+      Serial.println("Warning cover removed");
+    }
+    if (alarmState == 5) {
+      Serial.println("Vacuum leak detected, check seal");
+    }
+    lastAlarmPrint = millis();  // update timer
   }
-  if (alarmState == 2) {
-    Serial.println("Warning plasma plate overheated");
-  }
-  if (alarmState == 3) {
-    Serial.println("Warning transformer overheated");
-  }
-  if (alarmState == 4) {
-    Serial.println("Warning cover removed");
-  }
-  if (alarmState == 5) {
-    Serial.println("Vacuum leak detected, check seal");
-  }
-  lastAlarmPrint = timeNow;  // update timer
 }
