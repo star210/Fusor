@@ -68,14 +68,21 @@ IDC10 expansion connector pinout
 
 Triggers that cause an ALARM state, switch OFF both pump and High Voltage relays. Wait for RESET on web
 
-| Alarm Event               | Description                                 | 
-|---------------------------|---------------------------------------------|
-| PUMP_TEMP_MAX is reached  | Pump overheated                             | 
-| DE_GAS_TIMEOUT is reached | Seal leak causing it to never get to vacuum | 
-| PLATE_TEMP_MAX is reached | Plasma causing too much heat                |
-| MIN_PRESSURE reached      | Cracked glass exposing HV element           |
-| SAFETY_SWITCH triggered   | Removal of plinth cover vacuum ok but no HV |
-| VARIAC_MAX not reached    | Variac test failed                          |
+| Alarm Event                       | Description                                 | 
+|-----------------------------------|---------------------------------------------|
+| VACCUUM_PUMP_TEMP_MAX is reached  | Pump overheated                             | 
+| PUMP_TIMEOUT is reached           | Seal leak causing it to never get to vacuum | 
+| TRANSFORMER_TEMP_MAX              | Transformer overheated                      | 
+| PLASMA_PLATE_TEMP_MAX is reached  | Plasma causing too much heat                |
+| MIN_PRESSURE reached              | Cracked glass exposing HV element           |
+| SAFETY_SWITCH trigger             | Removal of plinth cover vacuum ok but no HV |
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+| Settings                          | Description                                 | 
+|-----------------------------------|---------------------------------------------|
+| MAX_VOLTAGE         | Voltage input limit to variac                             |
+| MAX_PRESSURE                      | Pressure to turn off vacuum pump            |
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
