@@ -13,10 +13,6 @@ int SensorNumber = 0; // Counter of sensors
 
 unsigned long previousTempReadTime = 0;      
 
-float vacuumPumpTemp = 0;
-float plasmaPlateTemp = 0;
-float transformerTemp = 0;
-
 OneWire oneWire(TEMP_SENSOR);// Temp sensor pin
 // Pass the oneWire reference to DallasTemperature library:
 DallasTemperature sensors(&oneWire);
@@ -38,9 +34,9 @@ void update() {
 
   if (tempReadTime - previousTempReadTime >= 1000) { // Read and update only if 1 second has passed
     sensors.requestTemperatures();
-    vacuumPumpTemp = getTemperature(sensor1);
-    plasmaPlateTemp = getTemperature(sensor2);
-    transformerTemp = getTemperature(sensor3);
+   float vacuumPumpTemp = sensors.getTempC(sensor1);
+   float plasmaPlateTemp = sensors.getTempC(sensor2);
+   float transformerTemp = sensors.getTempC(sensor3);
 
     if (vacuumPumpTemp > VACCUUM_PUMP_TEMP_MAX) {
       alarmState = 1;
@@ -55,13 +51,5 @@ void update() {
 }
 
 void printTemperature() {
-  Serial.print("Vacuum Pump Temp: "); Serial.print(vacuumPumpTemp); Serial.print(" \xC2\xB0"); Serial.println("C");
-  Serial.print("Plasma Plate Temp: "); Serial.print(plasmaPlateTemp); Serial.print(" \xC2\xB0"); Serial.println("C");
-  Serial.print("Transformer Temp: "); Serial.print(transformerTemp); Serial.print(" \xC2\xB0"); Serial.println("C");
-}
-
-void getTemperature(DeviceAddress address) {
-  // Fetch the temperature in degrees Celsius for device address:
-  float tempC = sensors.getTempC(address);
-  return tempC;
+  Serial.print("Pump: ",vacuumPumpTemp," \xC2\xB0","C","  Plate: ",plasmaPlateTemp," \xC2\xB0","C","  XFMR: ",transformerTemp," \xC2\xB0","C");
 }

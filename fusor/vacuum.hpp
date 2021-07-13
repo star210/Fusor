@@ -4,7 +4,7 @@
 
 #define PUMP_TIMEOUT  180;    //Seconds, Seal leak causing it to never get to vacuum
 #define MIN_PRESSURE            //milliTorr lower pressure limit
-#define MAX_PRESSUE            // milliTorr upper pressure limit
+#define MAX_PRESSURE            // milliTorr upper pressure limit
 
 // 1 atm = 1 torr/760
 // interpolating lookup table "LUT" in PROGMEM

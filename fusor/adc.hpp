@@ -82,9 +82,5 @@ void update()
 }
 
 void printSensorValues() {
-  Serial.print("Vacuum Pressure: "); Serial.print(vacuumPressure); Serial.println(" mTorr");
-  Serial.print("Variac Voltage: "); Serial.print(variacVolts); Serial.println(" Volts AC");
-  Serial.print("Variac Current: "); Serial.print(variacMilliAmps); Serial.println(" mA AC");
-  Serial.print("NST Voltage: "); Serial.print(highVoltageKiloVolts); Serial.println(" KV DC");
-  Serial.print("NST Current: "); Serial.print(highVoltageMilliAmps); Serial.println(" mA DC");
+  Serial.println("Vacuum: ",vacuumPressure," mTorr", "  Variac: ",variacVolts," Volts AC ",variacMilliAmps," mA AC", "  Transformer: ",highVoltageKiloVolts," KV DC ",highVoltageMilliAmps," mA DC");
 }

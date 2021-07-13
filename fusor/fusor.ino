@@ -2,24 +2,24 @@
 /* To do
 
   vacuum lookup table
-  PID test with dummy load
-  serial print rtc timer
+  PID test check voltage with dummy load
+  temp sensor pin 25 not working...
 */
 
-#define INCREASE_TIME 400;
-#define COOLDOWN_TIME 1000;
-#define PLASMA_TIME 1000;
+#define VOLTAGE_STEP_TIME 100;   // smaller is faster ramp speed
+#define COOLDOWN_TIME 1000;      // time to cool components after a cycle
+#define PLASMA_TIME 1000;        // plasma on time at max voltage
 
 unsigned long plasmaTimer;
 unsigned long plasmaTime;
-
 unsigned long cooldownTimer;
+unsigned long cooldownTime;
 unsigned long lastTime;
 
 bool cooldownStarted = 0;
 bool plasmaStarted = 0;
 
-int alarmState = 0;           //Removal of plinth cover vacuum ok but no HV
+int alarmState = 0;          // alarmState variable
 
 
 enum State {
@@ -34,7 +34,6 @@ enum State {
 
 void setup() {
 
-
   buttons.setup();
   adc.setup();
   variac.setup();
@@ -47,32 +46,32 @@ void setup() {
 }
 
 loop() {
-
+  readbutton
   if (alarmState > 0) {  // If any of the 5 alarms trigger set to alarm state
     state = ALARM;
   }
 
   switch (STATE) {
     case IDLE:
+      // readbutton here
       if (buttonType == 1) { // Square button pressed
         state = VACUUM;
       }
       break;
 
     case VACUUM:
-      vacuumPump = 1; // Start vacuum pump routine
-      if (vacuumPressure < MIN_PRESSURE) {
-        state = PLASMA;  //can this be done in vacuum.hpp ?
-        variacRelayState = 1; // turn on power to variac
+      vacuumPump = 1;                                        // Start vacuum pump routine
+      if (vacuumPressure < MIN_PRESSURE) {                   // pressure low enough to allow safe plasma with arcing
+        state = PLASMA;                                      //can this be done in vacuum.hpp ?
+        variacRelayState = 1;                                // turn on power to variac
       }
       break;
 
     case VOLTAGE_UP:
-      if (millis() - lastTime > 100) {        // increase voltage every 100ms
+      if (millis() - lastTime > VOLTAGE_STEP_TIME) {        // increase voltage every 100ms
         if (setVoltage < MAX_VOLTAGE) {
           setVoltage ++;
-          Serial.println(setVoltage);
-          Serial.print(" Volts");
+          Serial.println(setVoltage, " Volts");
         }
         else if (setVoltage >= MAX_VOLTAGE) {
           Serial.println("Max voltage reached");
@@ -96,11 +95,10 @@ loop() {
       break;
 
     case VOLTAGE_DOWN:
-      if (millis() - lastTime > 100) {        // increase voltage every 100ms
+      if (millis() - lastTime > VOLTAGE_STEP_TIME) {        // increase voltage every 100ms
         if (setVoltage > 0) {
           setVoltage --;                  // decrease voltage by 1 volt
-          Serial.println(setVoltage);
-          Serial.print(" Volts");
+          Serial.println(setVoltage, " Volts");
         }
         else if (setVoltage <= 0) {
           variacRelayState = 0; // turn on power to variac
