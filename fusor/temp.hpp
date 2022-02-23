@@ -1,55 +1,70 @@
+#pragma once
 
-#include "pins.hpp"
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-#define precision 12 // OneWire precision (9 - 12 bit range)
+#include "settings.hpp"
+#include "pins.hpp"
+#include "util.hpp"
 
-#define VACCUUM_PUMP_TEMP_MAX 140
-#define PLASMA_PLATE_TEMP_MAX 100
-#define TRANSFORMER_TEMP_MAX 90
+byte vacuumSensor[8] = {0x28, 0xAA, 0x50, 0x77, 0x91, 0x0F, 0x02, 0x11};
+byte plasmaSensor[8] = {0x28, 0xCB, 0xE9, 0x1D, 0x07, 0x00, 0x00, 0x8F};
+byte transormerSensor[8] = {0x28, 0xE7, 0x65, 0x77, 0x91, 0x10, 0x02, 0x8C};
 
-int SensorNumber = 0; // Counter of sensors
+class _Temp {
+  public:
+    _Temp(): oneWire(Pins::TEMP_SENSOR), sensors(&oneWire) {}
 
-unsigned long previousTempReadTime = 0;      
-
-OneWire oneWire(TEMP_SENSOR);// Temp sensor pin
-// Pass the oneWire reference to DallasTemperature library:
-DallasTemperature sensors(&oneWire);
-// Addresses of DS18B20 sensors connected to the 1-Wire bus
-byte sensor1[8] = {0x28, 0xAA, 0x50, 0x77, 0x91, 0x0F, 0x02, 0x11};
-byte sensor2[8] = {0x28, 0xCB, 0xE9, 0x1D, 0x07, 0x00, 0x00, 0x8F};
-byte sensor3[8] = {0x28, 0xE7, 0x65, 0x77, 0x91, 0x10, 0x02, 0x8C};
-
-void setup() {
-  sensors.begin();
-  Serial.print("Found: ");
-  Serial.print(sensors.getDeviceCount(), DEC);
-  Serial.println(" Temp Sensors");
-}
-
-void update() {
-
-  unsigned long tempReadTime = millis(); // timer to read temp every 1 second
-
-  if (tempReadTime - previousTempReadTime >= 1000) { // Read and update only if 1 second has passed
-    sensors.requestTemperatures();
-   float vacuumPumpTemp = sensors.getTempC(sensor1);
-   float plasmaPlateTemp = sensors.getTempC(sensor2);
-   float transformerTemp = sensors.getTempC(sensor3);
-
-    if (vacuumPumpTemp > VACCUUM_PUMP_TEMP_MAX) {
-      alarmState = 1;
+    void begin() {
+      sensors.begin();
+      debugln("found", sensors.getDeviceCount(), "sensors");
+      debugln("Temp setup complete");
     }
-    if (plasmaPlateTemp > PLASMA_PLATE_TEMP_MAX) {
-      alarmState = 2;
-    }
-    if (transformerTemp > TRANSFORMER_TEMP_MAX) {
-      alarmState = 3;
-    }
-    previousTempReadTime = tempReadTime;  
-}
 
-void printTemperature() {
-  Serial.print("Pump: ",vacuumPumpTemp," \xC2\xB0","C","  Plate: ",plasmaPlateTemp," \xC2\xB0","C","  XFMR: ",transformerTemp," \xC2\xB0","C");
-}
+    void update() {
+      auto timeNow = millis();
+      if (timeNow > lastUpdateTime + settings.structure.updateInterval) {
+        lastUpdateTime = timeNow;
+        sensors.requestTemperatures();
+        pumpTemp = sensors.getTempC(vacuumSensor);
+        plateTemp = sensors.getTempC(plasmaSensor);
+        transformerTemp = sensors.getTempC(transormerSensor);
+      }
+      if (pumpTemp > settings.structure.maxPumpTemp) {
+        Alarm.raise(VACUUM_PUMP_OVERHEAT);
+      }
+      if (plateTemp > settings.structure.maxPlasmaTemp) {
+        Alarm.raise(PLASMA_PLATE_OVERHEAT);
+      }
+      if (transformerTemp > settings.structure.maxTransformerTemp) {
+        Alarm.raise(TRANSFORMER_OVERHEAT);
+      }
+    }
+
+    double getPump() {
+      return pumpTemp;
+    }
+    double getPlasma() {
+      return plateTemp;
+    }
+    double getTransformer() {
+      return transformerTemp;
+    }
+
+    bool Print() {
+      return printTemp;
+    }
+
+    void Toggle() {
+      printTemp = ! printTemp;
+    }
+
+  public:
+    uint32_t lastUpdateTime = 0;
+    OneWire oneWire;
+    DallasTemperature sensors;
+    bool printTemp = false;
+    float pumpTemp, plateTemp, transformerTemp;
+};
+
+extern _Temp Temp;

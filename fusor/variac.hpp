@@ -1,61 +1,124 @@
 #pragma once
 
+//#include <Tic.h>
+#include <JrkG2.h>
 #include <PID_v1.h>
+
+#include "settings.hpp"
 #include "pins.hpp"
-#include "adc.hpp"  // variac voltage needed to drive the PID
+#include "sensors.hpp"  // variac voltage needed to drive the PID
 
-#define PWM_FREQUENCY 30000;      // 30khz pwm frequency 
-#define PWM_RESOUTION 8;          // 8 bit resolution (1 - 16)
-#define PWM_CHANNEL_1 0;
-#define PWM_CHANNEL_2 1;
+class _Variac {
+  public:
 
-#define MAX_VOLTAGE 100; // Max output voltage limit in volts
+    _Variac(): myPID(&input, &output, &setpoint, settings.structure.motorP, settings.structure.motorI, settings.structure.motorD, DIRECT) {}
 
-double kp = 0, ki = 0, kd = 0.0;
-double input = 0, output = 0, setpoint = 0;
-PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
+    void begin() {
+      pinMode(VARIAC_RELAY, OUTPUT);
+      digitalWrite(VARIAC_RELAY, LOW);
+      myPID.SetMode(AUTOMATIC);   //set PID in Auto mode
+      myPID.SetSampleTime(100);  // refresh rate of PID controller
+      // myPID.SetOutputLimits(-2000, 2000);    // TIC T249 max velocity
+      myPID.SetOutputLimits(-100, 100);    // JRK 24v19 max pwm
+      setPID();
+      debugln("Variac setup complete");
+    }
 
-bool variacRelayState = 0; // bool to store relay state
-int setVoltage = 0;  
+    void enable(bool on = true) {
+      enabled = on;
+    }
 
-void setup() {
+    void disable() {
+      enabled = false;
+    }
 
-  pinMode(M1, OUTPUT);
-  pinMode(M2, OUTPUT);
+    void setPID() {
+      myPID.SetTunings(settings.structure.motorP, settings.structure.motorI, settings.structure.motorD);
+      debugln("P:", settings.structure.motorP, "I:", settings.structure.motorI, "D:", settings.structure.motorD, "Updated");
+    }
 
-  pinMode(HIGH_VOLTAGE_RELAY, OUTPUT);
-  digitalWrite(HIGH_VOLTAGE_RELAY, LOW);
+    void turnRelayOn(bool on = true) {
+      variacRelayState = on;
+    }
 
-  ledcSetup(PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOUTION);
-  ledcAttachPin(M1, PWM_CHANNEL_1);
-  ledcAttachPin(M2, PWM_CHANNEL_2);
+    bool setVoltage (int voltage, int stepTime) {
+      auto now = millis();
+      if (now - lastTime > stepTime) {
+        lastTime = now;
+        if (setpoint < voltage) {
+          setpoint ++;
+          return false;
+        }
+        if (setpoint > voltage) {
+          setpoint --;
+          return false;
+        }
+        if (setpoint == voltage)
+          return true;
+      }
+      return false;
+    }
 
-  recoverPIDfromEEPROM();
+    void update() {
+      if (enabled) {
+        // tic.exitSafeStart();
+        variacRelayState = 1;
+        // Limit the input voltage
+        if (setpoint > settings.structure.maxVariacVoltage) {
+          setpoint = settings.structure.maxVariacVoltage;
+        }
+        // Update current and voltage values
+        if (Timer.variac(100)) {
+          input = Sensors.getVariacVoltage();
+          current = Sensors.getVariacCurrent();
+        }
+        myPID.Compute();
+        if (input == setpoint) {
+          // tic.setTargetVelocity(0);
+          jrk.stopMotor();
+        }
+        else {
+          //tic.setTargetVelocity(output * 1000);
+          jrk.forceDutyCycle(output * -1);
+        }
 
-  myPID.SetMode(AUTOMATIC);   //set PID in Auto mode
-  myPID.SetSampleTime(1);  // refresh rate of PID controller
-  myPID.SetOutputLimits(-125, 125); // this is the MAX PWM value to move motor, here change in value reflect change in speed of motor.
-  Serial.println("Motor setup complete");
-}
-void update() {
+        // Handle Alarms
+        error = abs(input - setpoint);
+        if (error > settings.structure.maxMotorError) {
+          // Alarm.raise(VARIAC_MOTOR_ERROR);  // Motor cannot keep up with PID
+        }
+        if (Sensors.getVariacCurrent() > settings.structure.maxVariacCurrent) {
+          //  Alarm.raise(VARIAC_OVERCURRENT);
+        }
+        if (printVariac) {
+          debugln(input, setpoint, output, error);
+        }
+      }
+      else {
+        variacRelayState = 0;
+      }
+      digitalWrite(VARIAC_RELAY, variacRelayState);  // update relay state
+    }
+    bool Print() {
+      return printVariac;
+    }
 
-  digitalWrite(HIGH_VOLTAGE_RELAY, variacRelayState);  // update relay state
+    void Toggle() {
+      printVariac = ! printVariac;
+    }
 
-  input = VariacVoltage;       // Voltage readout in Volts from variac voltage sensor
-  setpoint = setVoltage  // Set voltage 
-  
-    while (!myPID.Compute())
-        if (input == setpoint)pwmOut(0); else pwmOut(output);    // only move motor when needed
-        if (setVoltage > MAX_VOLTAGE) setVoltage = MAX_VOLTAGE;  // limit output voltage
-}
+  public:
+    PID myPID;
+    //TicI2C tic;
+    JrkG2I2C jrk;
+    double input = 0, output = 0, setpoint = 0, error = 0;
+    double kp, ki, kd;
+    double current;
 
-void pwmOut(int out) {
-  if (out < 0) {
-    ledcWrite(M1, 0);
-    ledcWrite(M2, abs(out));
-  }
-  else {
-    ledcWrite(M2, 0);
-    ledcWrite(M1, abs(out));
-  }
-}
+    uint32_t lastTime = 0;
+    bool printVariac = false;
+    bool enabled = false;
+    bool variacRelayState = false; // bool to store relay state
+};
+
+extern _Variac Variac;
